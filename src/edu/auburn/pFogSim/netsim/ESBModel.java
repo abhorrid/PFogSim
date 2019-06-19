@@ -157,8 +157,8 @@ public class ESBModel extends NetworkModel {
 		NodeSim current;
 		NodeSim nextHop;
 		LinkedList<NodeSim> path = null;
-		source = new Location(accessPointLocation.getXPos(), accessPointLocation.getYPos());
-		destination = new Location(destPointLocation.getXPos(), destPointLocation.getYPos());
+		source = new Location(accessPointLocation.getXPos(), accessPointLocation.getYPos(), accessPointLocation.getAltitude());
+		destination = new Location(destPointLocation.getXPos(), destPointLocation.getYPos(), destPointLocation.getAltitude());
 		
 		if(wifiSrc) {
 			src = networkTopology.findNode(source, true);
@@ -236,7 +236,9 @@ public class ESBModel extends NetworkModel {
 			if(location.equals(deviceLocation))
 				deviceCount++;
 		}*/
-		EdgeHost host = SimManager.getInstance().getLocalServerManager().findHostByLoc(deviceLocation.getXPos(), deviceLocation.getYPos());
+		EdgeHost host = SimManager.getInstance().getLocalServerManager().findHostByLoc(deviceLocation.getXPos(), deviceLocation.getYPos(), deviceLocation.getAltitude());
+		if (host == null)
+			SimLogger.printLine("Null Host");
 		return host.getCustomers().size();
 		//record max number of client just for debugging
 //		if(maxNumOfClientsInPlace<deviceCount)
@@ -374,7 +376,7 @@ public class ESBModel extends NetworkModel {
 		if (task.sens) {
 			src = networkTopology.findNode(SimManager.getInstance().getMobilityModel().getLocation(task.getDesMobileDeviceId(),CloudSim.clock()), false);
 		}
-		return router.findPath(networkTopology, src, dest).size();
+		return router.findPath(networkTopology, dest, src).size();
 	}
 	
 	/**
@@ -463,8 +465,8 @@ public class ESBModel extends NetworkModel {
 		NodeSim current;
 		NodeSim nextHop;
 		LinkedList<NodeSim> path = null;
-		source = new Location(one.getLocation().getXPos(), one.getLocation().getYPos());
-		destination = new Location(two.getLocation().getXPos(), two.getLocation().getYPos());
+		source = new Location(one.getLocation().getXPos(), one.getLocation().getYPos(), one.getLocation().getAltitude());
+		destination = new Location(two.getLocation().getXPos(), two.getLocation().getYPos(),two.getLocation().getAltitude());
 		src = networkTopology.findNode(source, false);
 		dest = networkTopology.findNode(destination, false);
 	    path = router.findPath(networkTopology, src, dest);

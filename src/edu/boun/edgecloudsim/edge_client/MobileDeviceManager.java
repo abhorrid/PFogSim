@@ -98,7 +98,7 @@ public class MobileDeviceManager extends DatacenterBroker {
 		//Qian added for sensor generated tasks getting download destination. Uncomment code on line 491 (Producer/Consumer)
 		if (task.sens) {
 			//SimLogger.printLine("HMMM? X: " + currentLocation.getXPos() + " Y: " + currentLocation.getYPos() + "Prod: " + task.getMobileDeviceId() + " Cons: " + task.getDesMobileDeviceId());
-			currentLocation = SimManager.getInstance().getMobilityModel().getLocation(task.getDesMobileDeviceId(),CloudSim.clock());
+			//currentLocation = SimManager.getInstance().getMobilityModel().getLocation(task.getDesMobileDeviceId(),CloudSim.clock());
 			//SimLogger.printLine("GOOD? X: " + currentLocation.getXPos() + " Y: " + currentLocation.getYPos() + "Prod: " + task.getMobileDeviceId() + " Cons: " + task.getDesMobileDeviceId());
 		}
 		
@@ -187,8 +187,8 @@ public class MobileDeviceManager extends DatacenterBroker {
 				if(WanDelay >= 0 && WanDelay <= task.getMaxDelay())
 				{
 					Location currentLocation = SimManager.getInstance().getMobilityModel().getLocation(task.getMobileDeviceId(),CloudSim.clock()+WanDelay);
-					int currWifiloc = ((ESBModel) SimManager.getInstance().getNetworkModel()).getNetworkTopology().findNode(currentLocation.getXPos(), currentLocation.getYPos(), true).getWlanId();
-					int actualLoc = ((ESBModel) SimManager.getInstance().getNetworkModel()).getNetworkTopology().findNode(task.getSubmittedLocation().getXPos(), task.getSubmittedLocation().getYPos(), true).getWlanId();
+					int currWifiloc = ((ESBModel) SimManager.getInstance().getNetworkModel()).getNetworkTopology().findNode(currentLocation.getXPos(), currentLocation.getYPos(),currentLocation.getAltitude(), true).getWlanId();
+					int actualLoc = ((ESBModel) SimManager.getInstance().getNetworkModel()).getNetworkTopology().findNode(task.getSubmittedLocation().getXPos(), task.getSubmittedLocation().getYPos(),task.getSubmittedLocation().getAltitude(), true).getWlanId();
 					if(actualLoc  == currWifiloc)
 					{
 						networkModel.downloadStarted(task.getSubmittedLocation(), SimSettings.CLOUD_DATACENTER_ID);
@@ -268,7 +268,7 @@ public class MobileDeviceManager extends DatacenterBroker {
 				}
 				else {
 					for (NodeSim node: path) {
-						k = SimManager.getInstance().getLocalServerManager().findHostByLoc(node.getLocation().getXPos(), node.getLocation().getYPos());
+						k = SimManager.getInstance().getLocalServerManager().findHostByLoc(node.getLocation().getXPos(), node.getLocation().getYPos(),node.getLocation().getAltitude());
 						//double bwCost = (task.getCloudletFileSize() + task.getCloudletOutputSize()) * k.getCostPerBW();
 						double bwCost = ((task.getCloudletFileSize() + task.getCloudletOutputSize())*8 / (double)1024) * k.getCostPerBW(); //Data size in KB * 8b/B ==>Kb / 1024 = Mb; k.getCostPerBW() in $/Mb -- Shaik modified
 						cost = cost + bwCost;
@@ -504,7 +504,7 @@ public class MobileDeviceManager extends DatacenterBroker {
 		//Also please uncomment the line 81. And IdleActiveLoadGenerator.java line 121
 		if (edgeTask.sensor) {
 			//SimLogger.printLine("++++++");
-			task.setDesMobileDeviceId(edgeTask.desMobileDeviceId);
+			//task.setDesMobileDeviceId(edgeTask.desMobileDeviceId);
 		}
 		return task;
 	}
