@@ -30,7 +30,7 @@ public class DataInterpreter {
 			"Chicago_Libraries.csv", 
 			"Chicago_Connect.csv", 
 			"Chicago_Schools.csv"};
-	private static String[][] nodeSpecs = new String[MAX_LEVELS][17];// the specs for all layers of the fog devices
+	private static String[][] nodeSpecs = new String[MAX_LEVELS][20];// the specs for all layers of the fog devices
 	private static ArrayList<Double[]> nodeList = new ArrayList<Double[]>();
 	private static ArrayList<Double[]> tempList = new ArrayList<Double[]>();
 	private static ArrayList<Double[]> universitiesCircle = new ArrayList<Double[]>();
@@ -115,12 +115,10 @@ public class DataInterpreter {
 				dataBR = new BufferedReader(dataFR);
 			}
 			catch (FileNotFoundException e) {
-				//SimLogger.printLine("Bad File Name");
 			}
 			dataBR.readLine(); //Gets rid of title data
 			while(dataBR.ready()) {
 
-				//SimLogger.printLine("Importing " + files[i]);
 				rawNode = dataBR.readLine();
 				nodeLoc = rawNode.split(",");
 				temp[0] = (double)counter; //ID
@@ -140,15 +138,7 @@ public class DataInterpreter {
 			    node.println(String.format("<host>\n\t<core>%s</core>\n\t<mips>%s</mips>\n\t<ram>%s</ram>\n\t<storage>%s</storage>\n", nodeSpecs[MAX_LEVELS - i - 1][9], nodeSpecs[MAX_LEVELS - i - 1][10], nodeSpecs[MAX_LEVELS - i - 1][11], nodeSpecs[MAX_LEVELS - i - 1][12]));
 			    node.println(String.format("\t<VM vmm=\"%s\">\n\t\t\t<core>%s</core>\n\t\t\t<mips>%s</mips>\n\t\t\t<ram>%s</ram>\n\t\t\t<storage>%s</storage>\n\t\t</VM>\n\t</host>\n</datacenter>", nodeSpecs[MAX_LEVELS - i - 1][2], nodeSpecs[MAX_LEVELS - i - 1][9], nodeSpecs[MAX_LEVELS - i - 1][10], nodeSpecs[MAX_LEVELS - i - 1][11], nodeSpecs[MAX_LEVELS - i - 1][12]));
 	
-				if(i == 2) { 
-						//SimLogger.printLine("University Fog node Id (prior to list add): "+counter+" Lat: "+temp[1]+" Lon: "+temp[2]);
-				}
-				//SimLogger.printLine("");
-
 				
-			    if (counter == 643) {
-			    	//SimLogger.print("");
-			    }
 				//Make link to previous closest node on higher level
 				if(!nodeList.isEmpty())
 				{
@@ -158,24 +148,19 @@ public class DataInterpreter {
 					//Go through all nodes one level up and find the closest
 					for(int j = 0; j < nodeList.size(); j++)
 					{
-						//SimLogger.printLine("Layer: "+(i+1)+"    nodeList.size = " + nodeList.size());
 
 						distance = measure(nodeList.get(j)[2], nodeList.get(j)[1], nodeList.get(j)[3], temp[2], temp[1], temp[3]);
-						//SimLogger.print("\nFog node Id: "+counter+" - Layer i: "+i+" - Parent Node Id: "+nodeList.get(j)[0]+" - Distance: " + distance);
 						if(distance < minDistance)
 						{
 							minDistance = distance;
 							index = j;
-							//SimLogger.print(" - New min distance: " + minDistance);
 						}
 					}
-					//SimLogger.print("\n\n\n");
 					minDistance = Double.MAX_VALUE;
 					if(index >= 0)
 					{
 						if(nodeList.get(index).equals(temp)) 
 						{
-							//SimLogger.printLine("Yep, they're the same thing");
 							System.exit(0);
 						}
 						double dis = measure(temp[2], temp[1], temp[3], nodeList.get(index)[2], nodeList.get(index)[1], nodeList.get(index)[3]) / 1000;
@@ -196,34 +181,21 @@ public class DataInterpreter {
 					    		"		<right_latency>" + latency + "</right_latency>\n" + 
 					    		"	</link>");
 						
-						//SimLogger.printLine("Link: "+nodeList.get(index)[0]+" - "+temp[0]);
 						
 					}
 				}
 
-				if(i == 2) { 
-				//	SimLogger.printLine("University Fog node Id (just before list add): "+counter+" Lat: "+temp[1]+" Lon: "+temp[2]);
-					//for (int kk=0; kk<tempList.size(); kk++)
-					//	SimLogger.printLine("University Fog node Id: "+tempList.get(kk)[0]+" Lat: "+tempList.get(kk)[1]+" Lon: "+tempList.get(kk)[2]);
-				}
+				
 
 				tempList.add(new Double[] {(double)temp[0], (double)temp[1], (double)temp[2], (double)temp[3]});
-				//tempList.add(temp);				
 				counter++;
 				
-				if(i == 2) { 
-				//	SimLogger.printLine("University Fog node Id (after list add): "+counter+" Lat: "+temp[1]+" Lon: "+temp[2]);
-					//for (int kk=0; kk<tempList.size(); kk++)
-						//SimLogger.printLine("University Fog node Id: "+tempList.get(kk)[0]+" Lat: "+tempList.get(kk)[1]+" Lon: "+tempList.get(kk)[2]);
-				}
-				//SimLogger.printLine("");
+				
 
 			}
 			
-			////SimLogger.printLine("Level : " + i + "\n\t" + prevCounter + " -> " + counter);
 			prevCounter = counter;
-			////SimLogger.printLine("nodeList" + nodeList.toString());
-			////SimLogger.printLine("tempList" + tempList.toString());
+
 			//move tempList to nodeList
 
 			// Include additional links among border routers
@@ -241,10 +213,8 @@ public class DataInterpreter {
 					//Go through all nodes and find the closest
 					for(int j = 0; j < tempList.size(); j++)
 					{
-						//SimLogger.printLine("nodeList.size = " + nodeList.size());
 
 						distance = measure(tempList.get(j)[2], tempList.get(j)[1], tempList.get(j)[3], input[2], input[1], input[3]);
-						//SimLogger.print("\nFog node Id (from): "+input[0]+" Fog node Id (to): "+tempList.get(j)[0]+" - Distance: " + distance+" - MinDistance: " + minDistance+" - SecMinDistance: " + secondminDistance);
 
 						if(distance < minDistance && distance != 0)
 						{
@@ -252,24 +222,20 @@ public class DataInterpreter {
 							index2 = index1;
 							minDistance = distance;
 							index1 = j;
-							//SimLogger.print(" - new minDistance: "+minDistance+" - new secondminDistance: "+ secondminDistance);
 						}
 
 						else if(distance < secondminDistance && distance != 0)
 						{
 							secondminDistance = distance;
 							index2 = j;
-							//SimLogger.print(" - new secondminDistance: "+ secondminDistance);
 						}
 					}
 					minDistance = Double.MAX_VALUE;
 					secondminDistance = Double.MAX_VALUE;
 					if(index1 >= 0)
 					{
-						//SimLogger.getInstance().print("Find first min index1: " + index1);
 						if(tempList.get(index1).equals(temp)) 
 						{
-							//SimLogger.printLine("Yep, they're the same thing");
 							System.exit(0);
 						}
 						double dis = measure(input[2], input[1], input[3], tempList.get(index1)[2], tempList.get(index1)[1], tempList.get(index1)[3]) / 1000;
@@ -290,17 +256,14 @@ public class DataInterpreter {
 						   		"		<right_latency>"+latency+"</right_latency>\n" + 
 						   		"	</link>");
 						
-						//SimLogger.printLine("\nLink: "+tempList.get(index1)[0]+" - "+input[0]);
 
 						}
 					if(index2 >= 0)
 					{
 						if(tempList.get(index2).equals(temp)) 
 						{
-							//SimLogger.printLine("Yep, they're the same thing");
 							System.exit(0);
 						}
-						//SimLogger.getInstance().print("Find second min index2: " + index2);
 						double dis = measure(input[2], input[1], input[3], tempList.get(index2)[2], tempList.get(index2)[1], tempList.get(index2)[3]) / 1000;
 						double latency = dis * 0.01;
 						links.println("<link>\n" + 
@@ -319,7 +282,6 @@ public class DataInterpreter {
 						   		"		<right_latency>"+latency+"</right_latency>\n" + 
 						   		"	</link>");
 						
-						//SimLogger.printLine("Link: "+tempList.get(index2)[0]+" - "+input[0]);
 						
 						}
 				}
@@ -330,7 +292,6 @@ public class DataInterpreter {
 				universitiesList.clear();
 				for(Double[] input : tempList) 	{
 					universitiesList.add(new Double[] {(double)input[0], (double)input[1], (double)input[2], (double)input[3]});
-					//SimLogger.printLine("University Fog node Id: "+input[0]+" Lat: "+input[1]+" Lon: "+input[2]);
 				}
 				universitiesCircle.clear();
 			}
@@ -361,7 +322,6 @@ public class DataInterpreter {
 			// else link to a nearest node of next higher layer
 			else{
 				nodeList.clear();
-				//nodeList.addAll(tempList);
 				for(Double[] input : tempList) 	{
 					nodeList.add(new Double[] {(double)input[0], (double)input[1], (double)input[2], (double)input[3]});
 				}
@@ -370,21 +330,14 @@ public class DataInterpreter {
 			// Prepare to process info for next layer fog nodes
 			tempList.clear();
 			
-			////SimLogger.printLine("nodeList" + nodeList.toString());
-			////SimLogger.printLine("tempList" + tempList.toString());
+
 		}// end - for MAX_LEVELS
 		
 		node.println("</edge_devices>");
 		links.println("</links>");
 		node.close();
 		links.close();
-		//SimLogger.printLine("Distance b/t : 41.975456,-87.71409\t and \t41.985456,-87.71409\n === " + measure(-87.71409,41.975456, -87.71408, 41.975446));
-		
-		//SimLogger.printLine("Min Long : " + MIN_LONG);
-		//SimLogger.printLine("Max Long : " + MAX_LONG);
-		//SimLogger.printLine("Min Lat : " + MIN_LAT);
-		//SimLogger.printLine("Max Lat : " + MAX_LAT);
-		//SimManager.getInstance().setSimulationSpace(MIN_LONG, MAX_LONG, MIN_LAT, MAX_LAT);
+
 		
 		return;
 	}
@@ -460,6 +413,12 @@ public class DataInterpreter {
 	 *  11 - ram<br>
 	 *  12 - storage
 	 *  13 - bandwidth - Kbps
+	 *  14 - idle power consumption of router (watt)<br>
+	 *  15 - energy for downloads (nJ/bit)<br>
+	 *  16 - energy for uploads (nJ/bit)<br>. IF DOWNLOAD AND UPLOAD nJ/bit BECOME DIFFERENT FOR ANY LAYER, CHANGE getDownloadEnergy in EnergyModel.java
+	 *  17 - max power consumption of router (watt)<br>
+	 *  18 - idle power consumption of fog node (watt)<br>
+	 *  19 - max power consumption of fog node (watt)<br>
 	 */
 	public static void initialize() {
 		double tenGbRouterCost = 151.67/2692915200.0 * 100; // $/Mb numbers taken from cisco ASR 901 10G router at $151.67 per month
@@ -483,9 +442,12 @@ public class DataInterpreter {
 		//nodeSpecs[MAX_LEVELS - 1][11] = "1500";
 		nodeSpecs[MAX_LEVELS - 1][12] = "1046898278400";
 		nodeSpecs[MAX_LEVELS - 1][13] = "104857600"; // Shaik modified to 1/100th - prev = 104857600 // Shaik fixed back to 100% value
-		nodeSpecs[MAX_LEVELS - 1][14] = "11000"; //Cameron and Matthew modified to add idle power (watt) 
-		nodeSpecs[MAX_LEVELS - 1][15] = "12.6"; //Cameron and Matthew modified to add energy for downloads (nJ/bit)
+		nodeSpecs[MAX_LEVELS - 1][14] = "11000"; // Cameron and Matthew modified to add idle power (watt) 
+		nodeSpecs[MAX_LEVELS - 1][15] = "12.6"; // Cameron and Matthew modified to add energy for downloads (nJ/bit)
 		nodeSpecs[MAX_LEVELS - 1][16] = "12.6"; //	Cameron and Matthew modified to add energy for uploads (nJ/bit)
+		nodeSpecs[MAX_LEVELS - 1][17] = "12300"; // Cameron and Matthew modified to add max power consumption (watt)
+		nodeSpecs[MAX_LEVELS - 1][18] = "161.47"; // Cameron and Matthew modified to add idle power consumption (watt)
+		nodeSpecs[MAX_LEVELS - 1][19] = "275"; // Cameron and Matthew modified to add max power consumption (watt)
 		
 		nodeSpecs[MAX_LEVELS - 2][0] = "City Hall";
 		nodeSpecs[MAX_LEVELS - 2][1] = "Linux";
@@ -503,9 +465,13 @@ public class DataInterpreter {
 		//nodeSpecs[MAX_LEVELS - 2][11] = "1500";
 		nodeSpecs[MAX_LEVELS - 2][12] = "10468982784";
 		nodeSpecs[MAX_LEVELS - 2][13] = "104857600"; // Shaik modified to 1/100th - prev = 104857600 // Shaik fixed back to 100% value
-		nodeSpecs[MAX_LEVELS - 2][14] = "11000"; //Cameron and Matthew modified to add idle power (watt) 
-		nodeSpecs[MAX_LEVELS - 2][15] = "12.6"; //Cameron and Matthew modified to add energy for downloads (nJ/bit)
-		nodeSpecs[MAX_LEVELS - 2][16] = "12.6"; //	Cameron and Matthew modified to add energy for uploads (nJ/bit)
+		nodeSpecs[MAX_LEVELS - 2][14] = "11000"; // Cameron and Matthew modified to add idle power (watt) 
+		nodeSpecs[MAX_LEVELS - 2][15] = "12.6"; // Cameron and Matthew modified to add energy for downloads (nJ/bit)
+		nodeSpecs[MAX_LEVELS - 2][16] = "12.6"; // Cameron and Matthew modified to add energy for uploads (nJ/bit)
+		nodeSpecs[MAX_LEVELS - 2][17] = "12300"; // Cameron and Matthew modified to add max power consumption (watt)
+		nodeSpecs[MAX_LEVELS - 2][18] = "161.47"; // Cameron and Matthew modified to add idle power consumption (watt)
+		nodeSpecs[MAX_LEVELS - 2][19] = "275"; // Cameron and Matthew modified to add max power consumption (watt)
+
 		
 		nodeSpecs[MAX_LEVELS - 3][0] = "University";
 		nodeSpecs[MAX_LEVELS - 3][1] = "Linux";
@@ -523,9 +489,13 @@ public class DataInterpreter {
 		//nodeSpecs[MAX_LEVELS - 3][11] = "1500";
 		nodeSpecs[MAX_LEVELS - 3][12] = "2617245696";
 		nodeSpecs[MAX_LEVELS - 3][13] = "10485760"; // Shaik modified to 1/100th - prev = 10485760 // Shaik fixed back to 100% value
-		nodeSpecs[MAX_LEVELS - 3][14] = "4000"; //Cameron and Matthew modified to add idle power (watt) 
-		nodeSpecs[MAX_LEVELS - 3][15] = "37"; //Cameron and Matthew modified to add energy for downloads (nJ/bit)
-		nodeSpecs[MAX_LEVELS - 3][16] = "37"; //	Cameron and Matthew modified to add energy for uploads (nJ/bit)
+		nodeSpecs[MAX_LEVELS - 3][14] = "4000"; // Cameron and Matthew modified to add idle power (watt) 
+		nodeSpecs[MAX_LEVELS - 3][15] = "37"; // Cameron and Matthew modified to add energy for downloads (nJ/bit)
+		nodeSpecs[MAX_LEVELS - 3][16] = "37"; // Cameron and Matthew modified to add energy for uploads (nJ/bit)
+		nodeSpecs[MAX_LEVELS - 3][17] = "4550"; // Cameron and Matthew modified to add max power consumption (watt)
+		nodeSpecs[MAX_LEVELS - 3][18] = "161.47"; // Cameron and Matthew modified to add idle power consumption (watt)
+		nodeSpecs[MAX_LEVELS - 3][19] = "275"; // Cameron and Matthew modified to add max power consumption (watt)
+
 		
 		nodeSpecs[MAX_LEVELS - 4][0] = "Ward";
 		nodeSpecs[MAX_LEVELS - 4][1] = "Linux";
@@ -542,9 +512,13 @@ public class DataInterpreter {
 		//nodeSpecs[MAX_LEVELS - 4][11] = "1500";
 		nodeSpecs[MAX_LEVELS - 4][12] = "1677721600";
 		nodeSpecs[MAX_LEVELS - 4][13] = "10485760"; // Shaik modified to 1/100th - prev = 10485760 // Shaik fixed back to 100% value
-		nodeSpecs[MAX_LEVELS - 4][14] = "4000"; //Cameron and Matthew modified to add idle power (watt) 
-		nodeSpecs[MAX_LEVELS - 4][15] = "37"; //Cameron and Matthew modified to add energy for downloads (nJ/bit)
-		nodeSpecs[MAX_LEVELS - 4][16] = "37"; //	Cameron and Matthew modified to add energy for uploads (nJ/bit)
+		nodeSpecs[MAX_LEVELS - 4][14] = "4000"; // Cameron and Matthew modified to add idle power (watt) 
+		nodeSpecs[MAX_LEVELS - 4][15] = "37"; // Cameron and Matthew modified to add energy for downloads (nJ/bit)
+		nodeSpecs[MAX_LEVELS - 4][16] = "37"; // Cameron and Matthew modified to add energy for uploads (nJ/bit)
+		nodeSpecs[MAX_LEVELS - 4][17] = "4550"; // Cameron and Matthew modified to add max power consumption (watt)
+		nodeSpecs[MAX_LEVELS - 4][18] = "170.08"; // Cameron and Matthew modified to add idle power consumption (watt)
+		nodeSpecs[MAX_LEVELS - 4][19] = "524.48"; // Cameron and Matthew modified to add max power consumption (watt)
+
 		
 		nodeSpecs[MAX_LEVELS - 5][0] = "Library";
 		nodeSpecs[MAX_LEVELS - 5][1] = "Linux";
@@ -561,9 +535,13 @@ public class DataInterpreter {
 		//nodeSpecs[MAX_LEVELS - 5][11] = "1500";
 		nodeSpecs[MAX_LEVELS - 5][12] = "167772160";
 		nodeSpecs[MAX_LEVELS - 5][13] = "10485760"; // Shaik modified to 1/100th - prev = 10485760 // Shaik fixed back to 100% value
-		nodeSpecs[MAX_LEVELS - 5][14] = "4000"; //Cameron and Matthew modified to add idle power (watt) 
-		nodeSpecs[MAX_LEVELS - 5][15] = "37"; //Cameron and Matthew modified to add energy for downloads (nJ/bit)
-		nodeSpecs[MAX_LEVELS - 5][16] = "37"; //	Cameron and Matthew modified to add energy for uploads (nJ/bit)
+		nodeSpecs[MAX_LEVELS - 5][14] = "4000"; // Cameron and Matthew modified to add idle power (watt) 
+		nodeSpecs[MAX_LEVELS - 5][15] = "37"; // Cameron and Matthew modified to add energy for downloads (nJ/bit)
+		nodeSpecs[MAX_LEVELS - 5][16] = "37"; // Cameron and Matthew modified to add energy for uploads (nJ/bit)
+		nodeSpecs[MAX_LEVELS - 5][17] = "4550"; // Cameron and Matthew modified to add max power consumption (watt)
+		nodeSpecs[MAX_LEVELS - 5][18] = "170.08"; // Cameron and Matthew modified to add idle power consumption (watt)
+		nodeSpecs[MAX_LEVELS - 5][19] = "524.48"; // Cameron and Matthew modified to add max power consumption (watt)
+
 		
 		nodeSpecs[MAX_LEVELS - 6][0] = "Community Center";
 		nodeSpecs[MAX_LEVELS - 6][1] = "Linux";
@@ -579,9 +557,13 @@ public class DataInterpreter {
 		nodeSpecs[MAX_LEVELS - 6][11] = "16384";
 		nodeSpecs[MAX_LEVELS - 6][12] = "167772160";
 		nodeSpecs[MAX_LEVELS - 6][13] = "1048576"; // Shaik modified to 1/100th - prev = 1048576 // Shaik fixed back to 100% value
-		nodeSpecs[MAX_LEVELS - 6][14] = "1589"; //Cameron and Matthew modified to add idle power (watt) 
-		nodeSpecs[MAX_LEVELS - 6][15] = "31.7"; //Cameron and Matthew modified to add energy for downloads (nJ/bit)
-		nodeSpecs[MAX_LEVELS - 6][16] = "31.7"; //	Cameron and Matthew modified to add energy for uploads (nJ/bit)
+		nodeSpecs[MAX_LEVELS - 6][14] = "1589"; // Cameron and Matthew modified to add idle power (watt) 
+		nodeSpecs[MAX_LEVELS - 6][15] = "31.7"; // Cameron and Matthew modified to add energy for downloads (nJ/bit)
+		nodeSpecs[MAX_LEVELS - 6][16] = "31.7"; // Cameron and Matthew modified to add energy for uploads (nJ/bit)
+		nodeSpecs[MAX_LEVELS - 6][17] = "1766"; // Cameron and Matthew modified to add max power consumption (watt)
+		nodeSpecs[MAX_LEVELS - 6][18] = "71.5"; // Cameron and Matthew modified to add idle power consumption (watt)
+		nodeSpecs[MAX_LEVELS - 6][19] = "230.64"; // Cameron and Matthew modified to add max power consumption (watt)
+
 		
 		nodeSpecs[MAX_LEVELS - 7][0] = "School";
 		nodeSpecs[MAX_LEVELS - 7][1] = "Linux";
@@ -597,9 +579,13 @@ public class DataInterpreter {
 		nodeSpecs[MAX_LEVELS - 7][11] = "4096";
 		nodeSpecs[MAX_LEVELS - 7][12] = "41943040";
 		nodeSpecs[MAX_LEVELS - 7][13] = "1048576"; // Shaik modified to 1/100th - prev = 1048576 // Shaik fixed back to 100% value
-		nodeSpecs[MAX_LEVELS - 7][14] = "1589"; //Cameron and Matthew modified to add idle power (watt) 
-		nodeSpecs[MAX_LEVELS - 7][15] = "31.7"; //Cameron and Matthew modified to add energy for downloads (nJ/bit)
-		nodeSpecs[MAX_LEVELS - 7][16] = "31.7"; //	Cameron and Matthew modified to add energy for uploads (nJ/bit)
+		nodeSpecs[MAX_LEVELS - 7][14] = "1589"; // Cameron and Matthew modified to add idle power (watt) 
+		nodeSpecs[MAX_LEVELS - 7][15] = "31.7"; // Cameron and Matthew modified to add energy for downloads (nJ/bit)
+		nodeSpecs[MAX_LEVELS - 7][16] = "31.7"; // Cameron and Matthew modified to add energy for uploads (nJ/bit)
+		nodeSpecs[MAX_LEVELS - 7][17] = "1766"; // Cameron and Matthew modified to add max power consumption (watt)
+		nodeSpecs[MAX_LEVELS - 7][18] = "50.72"; // Cameron and Matthew modified to add idle power consumption (watt)
+		nodeSpecs[MAX_LEVELS - 7][19] = "197.22"; // Cameron and Matthew modified to add max power consumption (watt)
+
 
 	}
 

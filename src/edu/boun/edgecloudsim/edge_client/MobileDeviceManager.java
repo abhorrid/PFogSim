@@ -37,6 +37,7 @@ import edu.boun.edgecloudsim.core.SimManager;
 import edu.boun.edgecloudsim.core.SimSettings;
 import edu.boun.edgecloudsim.edge_server.EdgeHost;
 import edu.boun.edgecloudsim.edge_server.EdgeVM;
+import edu.boun.edgecloudsim.energy.EnergyModel;
 import edu.boun.edgecloudsim.network.NetworkModel;
 import edu.boun.edgecloudsim.utils.EdgeTask;
 import edu.boun.edgecloudsim.utils.Location;
@@ -94,24 +95,26 @@ public class MobileDeviceManager extends DatacenterBroker {
 		Task task = (Task) ev.getData();
 
 		Location currentLocation = SimManager.getInstance().getMobilityModel().getLocation(task.getMobileDeviceId(),CloudSim.clock());
-		boolean sepa = false;
-		//SimLogger.printLine("-");
+		boolean sepa = SimSettings.getInstance().getDeviceSeparation();
 		//Qian added for sensor generated tasks getting download destination. Uncomment code on line 491 (Producer/Consumer)
-		/*if (task.sens) {
-		 *  sepa = true;
-			//SimLogger.printLine("HMMM? X: " + currentLocation.getXPos() + " Y: " + currentLocation.getYPos() + "Prod: " + task.getMobileDeviceId() + " Cons: " + task.getDesMobileDeviceId());
+		if (task.sens) {
+			sepa = true;
 			currentLocation = SimManager.getInstance().getMobilityModel().getLocation(task.getDesMobileDeviceId(),CloudSim.clock());
-			//SimLogger.printLine("GOOD? X: " + currentLocation.getXPos() + " Y: " + currentLocation.getYPos() + "Prod: " + task.getMobileDeviceId() + " Cons: " + task.getDesMobileDeviceId());
-		} */
+		} 
 		
 		
 		//if(task.getSubmittedLocation().equals(currentLocation))
 		//{
-			//SimLogger.printLine(CloudSim.clock() + ": " + getName() + ": Cloudlet " + task.getCloudletId() + " received");
 			SimSettings.CLOUD_TRANSFER isCloud = (task.getAssociatedHostId() == 0)?SimSettings.CLOUD_TRANSFER.CLOUD_DOWNLOAD:SimSettings.CLOUD_TRANSFER.IGNORE;
 			double WlanDelay = networkModel.getDownloadDelay(task.getAssociatedHostId() * -1, task.getMobileDeviceId(), task.getCloudletOutputSize(), false, task.wifi, isCloud);
-			SimLogger.printLine("" + task.getAssociatedHostId());
-			SimLogger.printLine("" + task.getAssociatedHostId());
+			double downloadEnergy = EnergyModel.getDownloadEnergy(task.getAssociatedHostId() * -1, task.getMobileDeviceId(), task.getCloudletOutputSize(), false, task.wifi, isCloud);
+
+			if (sepa) {
+				WlanDelay = networkModel.getDownloadDelay(task.getAssociatedHostId() * -1, task.getDesMobileDeviceId(), task.getCloudletOutputSize(), false, task.wifi, isCloud);
+				downloadEnergy = EnergyModel.getDownloadEnergy(task.getAssociatedHostId() * -1, task.getDesMobileDeviceId(), task.getCloudletOutputSize(), false, task.wifi, isCloud);
+			}
+			EnergyModel.appendRouterEnergy(downloadEnergy);
+
 			SimLogger.getInstance().addHops(task.getCloudletId(), ((ESBModel) networkModel).getHops(task, task.getAssociatedHostId()));
 			SimLogger.getInstance().addHopsBack(task.getCloudletId(), ((ESBModel) networkModel).getHopsBack(task, task.getAssociatedHostId(), sepa));
 			/*if (((ESBModel) networkModel).getHops(task, task.getAssociatedHostId()) == 0) {
@@ -135,14 +138,6 @@ public class MobileDeviceManager extends DatacenterBroker {
 			else {
 				SimLogger.getInstance().failedDueToBandwidth(task.getCloudletId(), CloudSim.clock());
 			}
-		/*}
-		else
-		{
-			//SimLogger.printLine("task cannot be finished due to mobility of user!");
-			//SimLogger.printLine("device: " +task.getMobileDeviceId()+" - submitted " + task.getSubmissionTime() + " @ " + task.getSubmittedLocation().getXPos() + " handled " + CloudSim.clock() + " @ " + currentLocation.getXPos());
-			SimLogger.getInstance().failedDueToMobility(task.getCloudletId(), CloudSim.clock());
-			SimLogger.printLine("?");
-		}*/
 	}
 	
 	
@@ -281,6 +276,9 @@ public class MobileDeviceManager extends DatacenterBroker {
 					}
 					k = SimManager.getInstance().getLocalServerManager().findHostById(hostID);
 					double exCost = (double)task.getCloudletLength() / (k.getPeList().get(0).getMips()) * k.getCostPerSec(); // Shaik modified - May 09, 2019.
+					double time = (double)task.getCloudletLength() / (k.getPeList().get(0).getMips());
+					double dynamicEnergy = EnergyModel.calculateDynamicEnergyConsumption(task, k, time);
+					EnergyModel.appendFogNodeEnergy(dynamicEnergy);
 					//double exCost = task.getActualCPUTime() * task.getCostPerSec(); //Shaik - Note: This includes task processing delay + queuing delay at fog node. We do not want to charge the tenant for queuing delay as well, as the delay itself is bad enough, adding extra cost for task execution would make it worse.  
 					cost = cost + exCost;
 					//SimLogger.getInstance().getCentralizeLogPrinter().println("Task exec: Destination:\t"+ k.getId() + "\tExecuteCost:\t" + exCost + "\tTotalCost:\t" + cost);
@@ -421,7 +419,8 @@ public class MobileDeviceManager extends DatacenterBroker {
 			
 			SimSettings.CLOUD_TRANSFER isCloud = SimSettings.CLOUD_TRANSFER.IGNORE;
 			double WanDelay = networkModel.getUploadDelay(task.getMobileDeviceId(), nextHopId * -1, task.getCloudletFileSize(), task.wifi, false, isCloud);
-			
+			double uploadEnergy = EnergyModel.getUploadEnergy(task.getMobileDeviceId(), nextHopId * -1, task.getCloudletFileSize(), task.wifi, false, isCloud);
+			EnergyModel.appendRouterEnergy(uploadEnergy);
 			if(WanDelay>0){
 				networkModel.uploadStarted(currentLocation, nextHopId);
 				schedule(getId(), WanDelay, REQUEST_RECEIVED_BY_CLOUD, task);
@@ -454,7 +453,8 @@ public class MobileDeviceManager extends DatacenterBroker {
 		else /*(nextHopId == SimSettings.GENERIC_EDGE_DEVICE_ID)*/ {
 			SimSettings.CLOUD_TRANSFER isCloud = (nextHopId== 0)?SimSettings.CLOUD_TRANSFER.CLOUD_UPLOAD:SimSettings.CLOUD_TRANSFER.IGNORE;
 			double WlanDelay = networkModel.getUploadDelay(task.getMobileDeviceId(), nextHopId * -1, task.getCloudletFileSize(), task.wifi, false, isCloud);
-
+			double uploadEnergy = EnergyModel.getUploadEnergy(task.getMobileDeviceId(), nextHopId * -1, task.getCloudletFileSize(), task.wifi, false, isCloud);
+			EnergyModel.appendRouterEnergy(uploadEnergy);
 			if (SimSettings.getInstance().traceEnable()) {
 				SimLogger.printLine("WlanDelay: "+ WlanDelay+ "  taskmaxDelay: "+task.getMaxDelay());
 				if (WlanDelay < 0)
@@ -507,8 +507,7 @@ public class MobileDeviceManager extends DatacenterBroker {
 		//Qian add for sensor generated task getting destination uncomment the code inside if statement.
 		//Also please uncomment the line 81. And IdleActiveLoadGenerator.java line 121
 		if (edgeTask.sensor) {
-			//SimLogger.printLine("++++++");
-			//task.setDesMobileDeviceId(edgeTask.desMobileDeviceId);
+			task.setDesMobileDeviceId(edgeTask.desMobileDeviceId);
 		}
 		return task;
 	}
